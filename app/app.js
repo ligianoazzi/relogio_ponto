@@ -13,8 +13,7 @@ angular.module('myApp')
 		.state('cadastroCartaoPonto', {
 			url          : '/cadastroCartaoPonto',
 			templateUrl  : 'app/templates/cadastroCartaoPontoView.html',
-			controller   : 'CadastroCartaoPontoController',
-			controllerAs : 'cadastroCartaoPonto'
+			controller   : 'CadastroCartaoPontoController'
 		});
 });
 
@@ -68,7 +67,6 @@ angular.module("myApp")
 	$scope.url_web = url_web;
 	$scope.colaboradores = [];
     $scope.registrosRecentes = [];
-    $scope.preLoader = true;
     $scope.contador = 0;
 
     $scope.buscarColaboradoresPonto = function () {
@@ -80,10 +78,7 @@ angular.module("myApp")
         .then(function(result){
             $scope.colaboradores = result.data.naoRegistrados;
             $scope.registrosRecentes = result.data.registrosRecentes;
-            iniciarRelogio();
-            $scope.preLoader = false;
         });
-
 
     };
 
@@ -93,29 +88,29 @@ angular.module("myApp")
 
     $scope.configDialogRegistroPonto = function(event, dados) {
         // recebendo a hora atual;
-        let data = new Date();
-        dados.hora = document.getElementById('relogio').innerHTML;
-        dados.data = data.getFullYear()+"-"+(data.getMonth()+1)+"-"+data.getDate();
+        var data = new Date();
+        var h = data.getHours();
+        var m = data.getMinutes();
+        var s = data.getSeconds();
 
+        var d = data.getDate();
+        var mM = $scope.formatarTempo((data.getMonth())+1); // aumenta 1 porque os meses começam em 0
+        var yyyy = data.getFullYear();
 
-        let url = "app/templates/dialogRegistroPonto.html";
-        let ctrl = "DialogRegistroPontoController";
-        let locals = { dados:dados };
+        m = $scope.formatarTempo(m);
+        s = $scope.formatarTempo(s);
+        d = $scope.formatarTempo(d);
 
-
+        dados.hora = h + ":" + m + ":" + s;
+        dados.data = yyyy+"-"+mM+"-"+d;
 		$mdDialog.show({
-		    controller          : ctrl,
-		    controllerAs        : 'ctrl',
-		    templateUrl         : url,
-		    parent              : angular.element(document.body),
+		    controller          : "DialogRegistroPontoController",
+		    templateUrl         : "app/templates/dialogRegistroPonto.html",
 		    targetEvent         : event,
 		    clickOutsideToClose : false,
-		    multiple            : true,
-		    locals              : locals,
-		    skipHide: true, // Faz com que dialogs atrás não sejam escondidas
+		    locals              : { dados:dados },
 		})
 		.then(function(result){
-            // $scope.preLoader = true;
             $scope.buscarColaboradoresPonto();
 
 
@@ -123,32 +118,20 @@ angular.module("myApp")
                 controller: function($mdDialog, $timeout) {
                     var dialog = this;
                     this.esconder = function() {
-                        console.log("teste");
                         $mdDialog.hide();
                     }
                     $timeout(dialog.esconder, 1000);
                     
 
                 },
-                controllerAs        : 'ctrl',
                 template            : '<md-dialog aria-label="Aviso">' +
                                        '  <md-dialog-content>'+
                                        '    <div class="md-dialog-content">'+
                                        '  <span class="md-headline">Registrado!</span>' +
                                        '    </md-card>'+
                                        '  </div>' +
-                                       // '  <md-dialog-actions>' +
-                                       // '    <md-button ng-click="ctrl.hide()" class="md-primary">' +
-                                       // '      Ok' +
-                                       // '    </md-button>' +
-                                       // '  </md-dialog-actions>' +
                                        '</md-dialog>',
-                parent              : angular.element(document.body),
-                targetEvent         : event,
-                // clickOutsideToClose : false,
-                // multiple            : true,
-                // locals              : locals,
-                skipHide: true, // Faz com que dialogs atrás não sejam escondidas
+                targetEvent         : event
               });
 
             
@@ -157,42 +140,16 @@ angular.module("myApp")
 
     $scope.buscarColaboradoresPonto();
 
-    function iniciarRelogio() {
-        var today = new Date();
-        var h = today.getHours();
-
-        var m = today.getMinutes();
-        var s = today.getSeconds();
-
-        var d = today.getDate();
-        var mM = (today.getMonth())+1; // aumenta 1 porque os meses começam em 0
-        var yyyy = today.getFullYear();
-
-        m = formatarTempo(m);
-        s = formatarTempo(s);
-        d = formatarTempo(d);
-
-        $scope.verificaHora(m);
-
-        document.getElementById('relogio').innerHTML =
-        h + ":" + m + ":" + s;
-
-        document.getElementById('dia').innerHTML =
-        d + "/" + mM + "/" + yyyy;
-
-        var t = setTimeout(iniciarRelogio, 500);
-    }
-
-    function formatarTempo(i) {
+    $scope.formatarTempo = function(i) {
         if (i < 10) {i = "0" + i};  // add zero in front of numbers < 10
         return i;
     }
 
-    $scope.verificaHora = function(minutos) {
-        if(minutos == "0") {
-            $scope.buscarColaboradoresPonto();
-        }
-    }
+    setInterval(
+    	function() {
+    	 $scope.buscarColaboradoresPonto();
+    	}, 1800000);
+
 });
 
 angular.module("myApp")
@@ -203,8 +160,6 @@ angular.module("myApp")
 	$scope.bolasVermelhas = [];
 	$scope.bolasBrancas = [1,2,3,4];
 	$scope.senha = "";
-
-    $scope.preLoader = true;
 
     $scope.cancel = function(){
         $mdDialog.cancel(); 
@@ -239,8 +194,8 @@ angular.module("myApp")
 
     // Controla o teclado
     $scope.digitar = function(botao) {
-    	let senha = $scope.senha;
-    	let ultimoChar = senha.length-1;
+    	var senha = $scope.senha;
+    	var ultimoChar = senha.length-1;
 
     	if(botao == "backspace") {
     		senha = senha.slice(0, ultimoChar);
@@ -266,27 +221,27 @@ angular.module("myApp")
 
     $scope.contaBolasBrancas = function(num) {
     	$scope.bolasBrancas = [];
-    	for(let i=1; i<=num;i++){
+    	for(var i=1; i<=num;i++){
     		$scope.bolasBrancas.push(i);
     	}
     }
 
 	$scope.contaBolasPretas = function(num) {
         $scope.bolasPretas = [];
-        for(let i=1; i<=num;i++){
+        for(var i=1; i<=num;i++){
             $scope.bolasPretas.push(i);
         }
     }
 
     $scope.contaBolasVermelhas = function(num) {
     	$scope.bolasVermelhas = [];
-    	for(let i=1; i<=num;i++){
+    	for(var i=1; i<=num;i++){
     		$scope.bolasVermelhas.push(i);
     	}
     }
 
     $scope.setDataNascimento = function() {
-    	let dataNascimento = $scope.dados.dt_nascimento;
+    	var dataNascimento = $scope.dados.dt_nascimento;
     	dataNascimento = dataNascimento.split("-");
     	$scope.dataNascimento = dataNascimento[2]+dataNascimento[1];
     }
